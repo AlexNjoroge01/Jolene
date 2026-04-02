@@ -1,0 +1,9 @@
+export const BRAND_COLORS = {
+  NAVY: "#1B2D4F",
+  LIME: "#6DBE45",
+  WHITE: "#FFFFFF",
+  LIGHT_BG: "#F5F7FA",
+  MID_GRAY: "#D8DEE8",
+  BODY_TEXT: "#333333",
+  SECONDARY_TEXT: "#555F70",
+} as const
