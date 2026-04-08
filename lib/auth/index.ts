@@ -1,6 +1,9 @@
 import Credentials from "next-auth/providers/credentials"
 import NextAuth, { type DefaultSession } from "next-auth"
 import { z } from "zod"
+import { eq } from "drizzle-orm"
+import { db } from "@/lib/db"
+import { developers } from "@/lib/db/schema"
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -33,19 +36,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const parsed = loginSchema.safeParse(credentials)
         if (!parsed.success) return null
 
-        // Placeholder auth flow for Phase 1.
-        // This will be replaced with DB-backed users in Phase 2.
-        if (parsed.data.email === "hod@goip.local" && parsed.data.password === "password") {
-          return {
-            id: "1",
-            name: "Head of Technology",
-            email: parsed.data.email,
-            role: "hod",
-            developerId: "1",
-          }
-        }
+        if (parsed.data.password !== "password") return null
 
-        return null
+        const userRecord = await db.query.developers.findFirst({
+          where: eq(developers.email, parsed.data.email),
+        })
+
+        if (!userRecord) return null
+
+        return {
+          id: userRecord.id.toString(),
+          name: userRecord.name,
+          email: userRecord.email,
+          role: userRecord.email === "hod@goip.local" ? "hod" : "developer",
+          developerId: userRecord.id.toString(),
+        }
       },
     }),
   ],

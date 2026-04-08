@@ -1,14 +1,13 @@
-import { Geist, Geist_Mono, Merriweather } from "next/font/google"
+import { Geist_Mono, Poppins } from "next/font/google"
 
 import "./globals.css"
 import { AppProviders } from "@/components/providers/app-providers"
 import { cn } from "@/lib/utils"
 
-const merriweather = Merriweather({ subsets: ["latin"], variable: "--font-serif" })
-
-const fontSans = Geist({
+const poppins = Poppins({
   subsets: ["latin"],
-  variable: "--font-sans",
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-poppins",
 })
 
 const fontMono = Geist_Mono({
@@ -25,7 +24,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("antialiased", fontSans.variable, fontMono.variable, "font-serif", merriweather.variable)}
+      className={cn("antialiased", poppins.variable, fontMono.variable, "font-sans")}
     >
       <body>
         <AppProviders>{children}</AppProviders>

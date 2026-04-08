@@ -10,14 +10,14 @@ export default async function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#F5F7FA] p-4">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <form
         action={async (formData) => {
           "use server"
           await signIn("credentials", {
             email: formData.get("email"),
             password: formData.get("password"),
-            redirectTo: "/",
+            redirectTo: "/dashboard",
           })
         }}
         className="w-full max-w-md space-y-4 rounded-xl border bg-background p-6 shadow-sm"
@@ -25,6 +25,9 @@ export default async function LoginPage() {
         <div>
           <h1 className="text-xl font-semibold">Jolene Sign In</h1>
           <p className="text-sm text-muted-foreground">Use HOD credentials to access dashboard.</p>
+          <p className="text-xs text-muted-foreground mt-2">
+            Preseeded accounts: hod@goip.local, john.fe@goip.local, mary.be@goip.local, alex.fs@goip.local (password: password)
+          </p>
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="email">
