@@ -15,6 +15,7 @@ export type GenerateReportInput = {
   periodStart?: string
   periodEnd?: string
   nextWeekPlan?: string
+  customNotes?: string
   projectIds?: number[]
 }
 
@@ -89,21 +90,22 @@ async function uploadPdfToCloudinary(pdfBuffer: Buffer, filename: string): Promi
 
   cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret })
 
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder: "jolene/reports",
-        resource_type: "raw",
-        public_id: filename,
-        format: "pdf",
-      },
-      (error, result) => {
-        if (error) reject(error)
-        else resolve(result!.secure_url)
-      },
-    )
-    uploadStream.end(pdfBuffer)
-  })
+  console.log(`[Cloudinary] Starting upload for ${filename}. Buffer size: ${pdfBuffer.length} bytes`)
+
+  try {
+    const base64Pdf = `data:application/pdf;base64,${pdfBuffer.toString("base64")}`
+    const result = await cloudinary.uploader.upload(base64Pdf, {
+      folder: "jolene/reports",
+      resource_type: "raw",
+      public_id: `${filename}.pdf`,
+    })
+
+    console.log(`[Cloudinary] Upload successful: ${result.secure_url}`)
+    return result.secure_url
+  } catch (error) {
+    console.error("[Cloudinary] Upload failed:", error)
+    throw error
+  }
 }
 
 export async function generateReport(input: GenerateReportInput): Promise<string> {
@@ -119,6 +121,7 @@ export async function generateReport(input: GenerateReportInput): Promise<string
       title: input.title,
       periodStart: input.periodStart,
       periodEnd: input.periodEnd,
+      customNotes: input.customNotes,
       data,
       logoBase64,
     })
@@ -128,6 +131,7 @@ export async function generateReport(input: GenerateReportInput): Promise<string
       periodStart: input.periodStart,
       periodEnd: input.periodEnd,
       nextWeekPlan: input.nextWeekPlan,
+      customNotes: input.customNotes,
       data,
       logoBase64,
     })

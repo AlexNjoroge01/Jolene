@@ -180,13 +180,15 @@ export type WeeklyReportInput = {
   periodStart?: string
   periodEnd?: string
   nextWeekPlan?: string
+  customNotes?: string
   data: ReportData
   logoBase64: string
 }
 
 export function renderWeeklyReport(input: WeeklyReportInput): string {
-  const { title, periodStart, periodEnd, data, logoBase64, nextWeekPlan } = input
+  const { title, periodStart, periodEnd, data, logoBase64, nextWeekPlan, customNotes } = input
   const today = new Date()
+  let html: string
 
   const periodDisplay =
     periodStart && periodEnd
@@ -525,8 +527,16 @@ export function renderWeeklyReport(input: WeeklyReportInput): string {
   <!-- NEXT WEEK PLAN -->
   <div class="section">
     <div class="section-heading">Next Week Plan</div>
-    <p class="summary-para">${nextWeekPlan ?? "To be updated by the Head of Technology and Engineering prior to the next reporting period."}</p>
+    <div class="summary-para">${nextWeekPlan || "To be updated by the Head of Technology and Engineering prior to the next reporting period."}</div>
   </div>
+
+  <!-- ADDITIONAL NOTES -->
+  ${input.customNotes ? `
+  <div class="section">
+    <div class="section-heading">Additional Notes</div>
+    <div class="summary-para">${input.customNotes}</div>
+  </div>
+  ` : ""}
 </body>
 </html>`
 }

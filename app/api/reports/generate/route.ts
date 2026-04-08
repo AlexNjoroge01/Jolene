@@ -12,6 +12,7 @@ const generateSchema = z.object({
   periodEnd: z.string().optional(),
   generatedBy: z.number().int().optional(),
   nextWeekPlan: z.string().optional(),
+  customNotes: z.string().optional(),
   projectIds: z.array(z.number().int()).optional(),
 })
 

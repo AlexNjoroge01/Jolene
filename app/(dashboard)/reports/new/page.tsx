@@ -1,7 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
+import dynamic from "next/dynamic"
+import "react-quill-new/dist/quill.snow.css"
+
+const ReactQuill = dynamic(() => import("react-quill-new"), {
+  ssr: false,
+  loading: () => <div className="h-[200px] w-full animate-pulse rounded-xl bg-muted" />,
+})
 import {
   AlertCircle,
   ArrowLeft,
@@ -95,6 +102,7 @@ export default function NewReportPage() {
   const [periodStart, setPeriodStart] = useState("")
   const [periodEnd, setPeriodEnd] = useState("")
   const [nextWeekPlan, setNextWeekPlan] = useState("")
+  const [customNotes, setCustomNotes] = useState("")
   const [projects, setProjects] = useState<Project[]>([])
   const [selectedProjectIds, setSelectedProjectIds] = useState<number[]>([])
   const [loadingProjects, setLoadingProjects] = useState(false)
@@ -120,7 +128,7 @@ export default function NewReportPage() {
       fetch("/api/projects")
         .then((r) => r.json())
         .then((d) => {
-          const list: Project[] = d.data ?? []
+          const list: Project[] = d ?? []
           setProjects(list)
           setSelectedProjectIds(list.map((p) => p.id))
         })
@@ -148,12 +156,13 @@ export default function NewReportPage() {
           periodStart: periodStart || undefined,
           periodEnd: periodEnd || undefined,
           nextWeekPlan: nextWeekPlan || undefined,
+          customNotes: customNotes || undefined,
           projectIds: selectedProjectIds.length > 0 ? selectedProjectIds : undefined,
         }),
       })
       const json = await res.json()
-      if (!res.ok) throw new Error(json.message ?? "Generation failed")
-      setGeneratedUrl(json.data?.pdfUrl ?? null)
+      if (!res.ok) throw new Error(json.error ?? json.message ?? "Generation failed")
+      setGeneratedUrl(json.pdfUrl ?? null)
       setStep(5)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An error occurred generating the report.")
@@ -524,20 +533,55 @@ export default function NewReportPage() {
             </div>
           </div>
 
-          {/* Next week plan (only for weekly) */}
-          {reportType === "weekly_eow" && (
+          {/* Next week plan (for weekly/custom) */}
+          {(reportType === "weekly_eow" || reportType === "custom") && (
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">
                 Next Week Plan{" "}
                 <span className="text-muted-foreground font-normal">(optional)</span>
               </label>
-              <textarea
-                value={nextWeekPlan}
-                onChange={(e) => setNextWeekPlan(e.target.value)}
-                rows={4}
-                placeholder="Enter the plan for next week…"
-                className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6DBE45]/40"
-              />
+              <div className="overflow-hidden rounded-xl border border-border bg-background">
+                <ReactQuill
+                  theme="snow"
+                  value={nextWeekPlan}
+                  onChange={setNextWeekPlan}
+                  placeholder="Enter the plan for next week…"
+                  modules={{
+                    toolbar: [
+                      [{ header: [1, 2, 3, false] }],
+                      ["bold", "italic", "underline", "strike"],
+                      [{ list: "ordered" }, { list: "bullet" }],
+                      ["clean"],
+                    ],
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Executive Notes (for HOD/Custom) */}
+          {(reportType === "hod_monday" || reportType === "custom") && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">
+                Executive Notes & Summary{" "}
+                <span className="text-muted-foreground font-normal">(optional)</span>
+              </label>
+              <div className="overflow-hidden rounded-xl border border-border bg-background">
+                <ReactQuill
+                  theme="snow"
+                  value={customNotes}
+                  onChange={setCustomNotes}
+                  placeholder="Add any specific highlights, risks, or executive summaries…"
+                  modules={{
+                    toolbar: [
+                      [{ header: [1, 2, 3, false] }],
+                      ["bold", "italic", "underline", "strike"],
+                      [{ list: "ordered" }, { list: "bullet" }],
+                      ["clean"],
+                    ],
+                  }}
+                />
+              </div>
             </div>
           )}
 
@@ -599,15 +643,33 @@ export default function NewReportPage() {
             </p>
           </div>
           {generatedUrl && (
-            <a
-              href={generatedUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-2 rounded-xl bg-[#1B2D4F] px-8 py-3 text-sm font-semibold text-white hover:bg-[#1B2D4F]/90 transition-colors"
-            >
-              <Download className="h-4 w-4" />
-              Download PDF Report
-            </a>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch(generatedUrl)
+                    if (!res.ok) throw new Error(`Fetch failed: ${res.status} ${res.statusText}`)
+                    const blob = await res.blob()
+                    const url = window.URL.createObjectURL(blob)
+                    const a = document.createElement("a")
+                    a.href = url
+                    a.download = `${title.replace(/\s+/g, "_")}.pdf`
+                    document.body.appendChild(a)
+                    a.click()
+                    window.URL.revokeObjectURL(url)
+                    document.body.removeChild(a)
+                  } catch (err) {
+                    // Fallback to direct link if fetch fails (CORS)
+                    console.error("[Download] Fetch failed, falling back to window.open:", err)
+                    window.open(generatedUrl, "_blank")
+                  }
+                }}
+                className="flex items-center justify-center gap-2 rounded-xl bg-[#1B2D4F] px-8 py-3 text-sm font-semibold text-white hover:bg-[#1B2D4F]/90 transition-colors"
+              >
+                <Download className="h-4 w-4" />
+                Download PDF Report
+              </button>
+            </div>
           )}
           <div className="flex gap-3">
             <button

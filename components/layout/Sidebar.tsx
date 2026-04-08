@@ -29,13 +29,10 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside
-      className="sticky top-0 flex h-screen w-72 flex-col border-r p-4"
-      style={{ backgroundColor: BRAND_COLORS.NAVY }}
-    >
+    <aside className="sticky top-0 flex h-screen w-72 flex-col border-r border-sidebar-border bg-sidebar p-4 transition-colors duration-300">
       <div className="mb-8 px-3 py-2">
-        <p className="text-xl font-semibold text-white">Jolene</p>
-        <p className="text-sm text-white/70">GOIP Engineering Ops</p>
+        <p className="text-xl font-semibold text-sidebar-foreground">Jolene</p>
+        <p className="text-sm text-sidebar-foreground/70">GOIP Engineering Ops</p>
       </div>
 
       <nav className="space-y-1">
@@ -52,7 +49,9 @@ export function Sidebar() {
               href={item.href}
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                isActive ? "bg-white/15 text-white" : "text-white/75 hover:bg-white/10 hover:text-white",
+                isActive
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
               )}
             >
               <Icon className="size-4" />

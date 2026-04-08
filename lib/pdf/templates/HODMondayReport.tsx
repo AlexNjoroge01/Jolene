@@ -210,13 +210,15 @@ export type HODReportInput = {
   title: string
   periodStart?: string
   periodEnd?: string
+  customNotes?: string
   data: ReportData
   logoBase64: string
 }
 
 export function renderHODMondayReport(input: HODReportInput): string {
-  const { title, periodStart, periodEnd, data, logoBase64 } = input
+  const { title, periodStart, periodEnd, data, logoBase64, customNotes } = input
   const today = new Date()
+  let html: string = ""
   const periodDisplay =
     periodStart && periodEnd
       ? `${shortDate(periodStart)} to ${shortDate(periodEnd)}`
@@ -482,6 +484,14 @@ export function renderHODMondayReport(input: HODReportInput): string {
       <tbody>${devRows}</tbody>
     </table>
   </div>
+
+  <!-- EXECUTIVE SUMMARY / NOTES -->
+  ${input.customNotes ? `
+  <div class="section">
+    <div class="section-heading">Executive Summary & Notes</div>
+    <div class="summary-para">${input.customNotes}</div>
+  </div>
+  ` : ""}
 </body>
 </html>`
 }
