@@ -30,7 +30,7 @@ export function Sidebar() {
 
   return (
     <aside
-      className="flex min-h-screen w-72 flex-col border-r p-4"
+      className="sticky top-0 flex h-screen w-72 flex-col border-r p-4"
       style={{ backgroundColor: BRAND_COLORS.NAVY }}
     >
       <div className="mb-8 px-3 py-2">

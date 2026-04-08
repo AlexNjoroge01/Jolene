@@ -5,7 +5,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
-export function Hero() {
+export function Hero({ isLoggedIn }: { isLoggedIn?: boolean }) {
   return (
     <section className="container mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center space-y-10 py-24 text-center md:py-32 lg:py-40">
       <motion.div
@@ -28,8 +28,8 @@ export function Hero() {
         transition={{ duration: 0.5, delay: 0.2 }}
         className="flex flex-col gap-4 sm:flex-row"
       >
-        <Link href="/login" className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto h-12 px-8 text-base shadow-lg shadow-primary/20")}>
-          Login to Dashboard
+        <Link href={isLoggedIn ? "/dashboard" : "/login"} className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto h-12 px-8 text-base shadow-lg shadow-primary/20")}>
+          {isLoggedIn ? "Go to Dashboard" : "Login to Dashboard"}
         </Link>
         <Link href="#about" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full sm:w-auto h-12 px-8 text-base bg-background")}>
           Learn More
