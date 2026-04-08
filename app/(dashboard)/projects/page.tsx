@@ -1,11 +1,12 @@
 import { PageHeader } from "@/components/layout/PageHeader"
 import { db, schema } from "@/lib/db"
 import { revalidatePath } from "next/cache"
-import { eq } from "drizzle-orm"
+import { eq, isNull } from "drizzle-orm"
 import Link from "next/link"
 
 export default async function ProjectsPage() {
   const projects = await db.query.projects.findMany({
+    where: isNull(schema.projects.deletedAt),
     orderBy: (projects, { desc }) => [desc(projects.createdAt)],
   })
 
@@ -34,7 +35,7 @@ export default async function ProjectsPage() {
   async function deleteProject(formData: FormData) {
     "use server"
     const id = Number(formData.get("id"))
-    await db.delete(schema.projects).where(eq(schema.projects.id, id))
+    await db.update(schema.projects).set({ deletedAt: new Date() }).where(eq(schema.projects.id, id))
     revalidatePath("/projects")
   }
 
@@ -42,14 +43,14 @@ export default async function ProjectsPage() {
     <div className="space-y-6">
       <PageHeader title="Projects" description="Project grid, filters, and portfolio health." />
 
-      <form action={createProject} className="grid gap-2 rounded-lg border bg-background p-4 md:grid-cols-4">
-        <input name="name" placeholder="Project name" required className="rounded border px-3 py-2 text-sm" />
-        <input name="code" placeholder="Code/slug" required className="rounded border px-3 py-2 text-sm" />
-        <input name="client" placeholder="Client" required className="rounded border px-3 py-2 text-sm" />
-        <button className="rounded bg-black px-3 py-2 text-sm text-white">Create Project</button>
+      <form action={createProject} className="grid gap-2 rounded-xl border bg-background p-4 md:grid-cols-4">
+        <input name="name" placeholder="Project name" required className="rounded-xl border px-3 py-2 text-sm" />
+        <input name="code" placeholder="Code/slug" required className="rounded-xl border px-3 py-2 text-sm" />
+        <input name="client" placeholder="Client" required className="rounded-xl border px-3 py-2 text-sm" />
+        <button className="rounded-xl bg-primary hover:bg-primary/90 px-3 py-2 text-sm text-primary-foreground">Create Project</button>
       </form>
 
-      <div className="overflow-hidden rounded-lg border bg-background">
+      <div className="overflow-hidden rounded-xl border bg-background">
         <table className="w-full text-sm">
           <thead className="bg-muted/40">
             <tr>
@@ -76,16 +77,16 @@ export default async function ProjectsPage() {
                     <form action={updateProjectStatus}>
                       <input type="hidden" name="id" value={project.id} />
                       <input type="hidden" name="status" value="active" />
-                      <button className="rounded border px-2 py-1 text-xs">Active</button>
+                      <button className="rounded-xl border border-border bg-secondary hover:bg-secondary/80 px-2 py-1 text-xs text-secondary-foreground">Active</button>
                     </form>
                     <form action={updateProjectStatus}>
                       <input type="hidden" name="id" value={project.id} />
                       <input type="hidden" name="status" value="paused" />
-                      <button className="rounded border px-2 py-1 text-xs">Pause</button>
+                      <button className="rounded-xl border border-border bg-secondary hover:bg-secondary/80 px-2 py-1 text-xs text-secondary-foreground">Pause</button>
                     </form>
                     <form action={deleteProject}>
                       <input type="hidden" name="id" value={project.id} />
-                      <button className="rounded border px-2 py-1 text-xs text-red-600">Delete</button>
+                      <button className="rounded-xl border border-destructive/50 px-2 py-1 text-xs text-destructive hover:bg-destructive/10">Delete</button>
                     </form>
                   </div>
                 </td>

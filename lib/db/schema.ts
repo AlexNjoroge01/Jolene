@@ -89,6 +89,7 @@ export const developers = pgTable("developers", {
   avatarUrl: text("avatar_url"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 })
 
 export const projects = pgTable("projects", {
@@ -102,6 +103,7 @@ export const projects = pgTable("projects", {
   endDate: date("end_date"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 })
 
 export const projectTeamMembers = pgTable("project_team_members", {
@@ -127,6 +129,7 @@ export const sprints = pgTable("sprints", {
   totalTasks: integer("total_tasks").notNull().default(0),
   completedTasks: integer("completed_tasks").notNull().default(0),
   status: sprintStatusEnum("status").notNull().default("upcoming"),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 })
 
 export const tasks = pgTable("tasks", {
@@ -206,6 +209,7 @@ export const standups = pgTable("standups", {
   }),
   notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 })
 
 export const standupEntries = pgTable("standup_entries", {
@@ -241,6 +245,7 @@ export const pullRequests = pgTable("pull_requests", {
     onDelete: "set null",
   }),
   reviewNotes: text("review_notes"),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 })
 
 export const reports = pgTable("reports", {
@@ -254,6 +259,7 @@ export const reports = pgTable("reports", {
   periodEnd: date("period_end"),
   pdfUrl: text("pdf_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 })
 
 export const dailyProgressLogs = pgTable("daily_progress_logs", {

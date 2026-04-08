@@ -1,13 +1,18 @@
 import { PageHeader } from "@/components/layout/PageHeader"
 import { revalidatePath } from "next/cache"
-import { eq } from "drizzle-orm"
+import { eq, isNull } from "drizzle-orm"
 
 import { db, schema } from "@/lib/db"
 
 export default async function PullRequestsPage() {
-  const projects = await db.query.projects.findMany()
-  const developers = await db.query.developers.findMany()
+  const projects = await db.query.projects.findMany({
+    where: isNull(schema.projects.deletedAt),
+  })
+  const developers = await db.query.developers.findMany({
+    where: isNull(schema.developers.deletedAt),
+  })
   const pullRequests = await db.query.pullRequests.findMany({
+    where: isNull(schema.pullRequests.deletedAt),
     orderBy: (pullRequests, { desc }) => [desc(pullRequests.openedAt)],
   })
 
@@ -43,33 +48,40 @@ export default async function PullRequestsPage() {
     revalidatePath("/prs")
   }
 
+  async function deletePullRequest(formData: FormData) {
+    "use server"
+    const id = Number(formData.get("id"))
+    await db.update(schema.pullRequests).set({ deletedAt: new Date() }).where(eq(schema.pullRequests.id, id))
+    revalidatePath("/prs")
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader title="PR Review Queue" description="Global pull request workflow and actions." />
 
-      <form action={createPullRequest} className="grid gap-2 rounded-lg border bg-background p-4 md:grid-cols-3">
-        <select name="projectId" required className="rounded border px-3 py-2 text-sm">
+      <form action={createPullRequest} className="grid gap-2 rounded-xl border bg-background p-4 md:grid-cols-3">
+        <select name="projectId" required className="rounded-xl border px-3 py-2 text-sm">
           {projects.map((project) => (
             <option key={project.id} value={project.id}>
               {project.name}
             </option>
           ))}
         </select>
-        <select name="developerId" required className="rounded border px-3 py-2 text-sm">
+        <select name="developerId" required className="rounded-xl border px-3 py-2 text-sm">
           {developers.map((developer) => (
             <option key={developer.id} value={developer.id}>
               {developer.name}
             </option>
           ))}
         </select>
-        <input name="prTitle" placeholder="PR title" required className="rounded border px-3 py-2 text-sm" />
-        <input name="prUrl" placeholder="PR URL" required className="rounded border px-3 py-2 text-sm" />
-        <input name="branch" placeholder="Branch" required className="rounded border px-3 py-2 text-sm" />
-        <input name="baseBranch" defaultValue="master" className="rounded border px-3 py-2 text-sm" />
-        <button className="rounded bg-black px-3 py-2 text-sm text-white md:col-span-3">Create PR</button>
+        <input name="prTitle" placeholder="PR title" required className="rounded-xl border px-3 py-2 text-sm" />
+        <input name="prUrl" placeholder="PR URL" required className="rounded-xl border px-3 py-2 text-sm" />
+        <input name="branch" placeholder="Branch" required className="rounded-xl border px-3 py-2 text-sm" />
+        <input name="baseBranch" defaultValue="master" className="rounded-xl border px-3 py-2 text-sm" />
+        <button className="rounded-xl bg-primary hover:bg-primary/90 px-3 py-2 text-sm text-primary-foreground md:col-span-3">Create PR</button>
       </form>
 
-      <div className="overflow-hidden rounded-lg border bg-background">
+      <div className="overflow-hidden rounded-xl border bg-background">
         <table className="w-full text-sm">
           <thead className="bg-muted/40">
             <tr>
@@ -88,21 +100,25 @@ export default async function PullRequestsPage() {
                 </td>
                 <td className="px-3 py-2">{pr.status}</td>
                 <td className="px-3 py-2">
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <form action={updatePrStatus}>
                       <input type="hidden" name="id" value={pr.id} />
                       <input type="hidden" name="status" value="approved" />
-                      <button className="rounded border px-2 py-1 text-xs">Approve</button>
+                      <button className="rounded-xl border border-border bg-secondary hover:bg-secondary/80 px-2 py-1 text-xs text-secondary-foreground">Approve</button>
                     </form>
                     <form action={updatePrStatus}>
                       <input type="hidden" name="id" value={pr.id} />
                       <input type="hidden" name="status" value="changes_requested" />
-                      <button className="rounded border px-2 py-1 text-xs">Request Changes</button>
+                      <button className="rounded-xl border border-border bg-secondary hover:bg-secondary/80 px-2 py-1 text-xs text-secondary-foreground">Request Changes</button>
                     </form>
                     <form action={updatePrStatus}>
                       <input type="hidden" name="id" value={pr.id} />
                       <input type="hidden" name="status" value="merged" />
-                      <button className="rounded border px-2 py-1 text-xs">Mark Merged</button>
+                      <button className="rounded-xl border border-border bg-secondary hover:bg-secondary/80 px-2 py-1 text-xs text-secondary-foreground">Mark Merged</button>
+                    </form>
+                    <form action={deletePullRequest}>
+                      <input type="hidden" name="id" value={pr.id} />
+                      <button className="rounded-xl border border-destructive/50 px-2 py-1 text-xs text-destructive hover:bg-destructive/10">Delete</button>
                     </form>
                   </div>
                 </td>
